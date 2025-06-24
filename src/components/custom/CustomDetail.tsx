@@ -5,8 +5,6 @@ import { useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { useCustomStore } from '../../store/customStore';
 import { useMatchStore } from '../../store/matchStore';
-import { ScoreRules } from '../score/ScoreRules';
-import type { ScoreRules as ScoreRulesType, TeamScore } from '../../types/score';
 import type { Match } from '../../types/match';
 
 export const CustomDetail = () => {

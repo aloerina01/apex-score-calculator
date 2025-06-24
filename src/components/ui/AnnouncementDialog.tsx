@@ -1,4 +1,4 @@
-import { Button, CloseButton, Dialog, Portal, Text, VStack } from "@chakra-ui/react";
+import { Button, Dialog, Portal, Text, VStack } from "@chakra-ui/react";
 
 interface AnnouncementDialogProps {
   isOpen: boolean;

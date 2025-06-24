@@ -7,12 +7,10 @@ import { useCustomStore } from '../../store/customStore';
 import { useMatchStore } from '../../store/matchStore';
 import { ScoreRules } from '../score/ScoreRules';
 import type { ScoreRules as ScoreRulesType, TeamScore } from '../../types/score';
-import type { Match } from '../../types/match';
 import type { GeminiApiResponse } from '../../types/api';
 import { analyzeImage } from '../../services/geminiService';
 
 export const MatchDetail = () => {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationComplete, setCalculationComplete] = useState(false);
@@ -26,7 +24,6 @@ export const MatchDetail = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentMatchId = useCustomStore((state) => state.currentMatchId);
-  const currentCustomId = useCustomStore((state) => state.currentCustomId);
   const getMatchById = useMatchStore((state) => state.getMatchById);
   const updateMatch = useMatchStore((state) => state.updateMatch);
   const getCurrentCustom = useCustomStore((state) => state.getCurrentCustom);
@@ -78,7 +75,6 @@ export const MatchDetail = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      setImagePreview(result);
       
       // マッチ情報を更新
       if (currentMatch) {

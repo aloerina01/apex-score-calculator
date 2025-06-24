@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Box, Text } from '@chakra-ui/react';
 import { useAuthStore } from './store/authStore';
 import { useCustomStore } from './store/customStore';

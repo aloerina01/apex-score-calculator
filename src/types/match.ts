@@ -1,6 +1,6 @@
 // マッチ情報の型定義
-import { TeamScore } from './score';
-import { ScoreRules } from './score';
+import type { TeamScore } from './score';
+import type { ScoreRules } from './score';
 
 export interface Match {
   id: string;
