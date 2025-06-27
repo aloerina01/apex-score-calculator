@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Match } from '../types/match';
-import type { ScoreRules } from '../types/score';
 
 interface MatchState {
   matches: Match[];
@@ -14,7 +13,6 @@ interface MatchState {
   // セレクタ
   getMatchesByCustomId: (customId: string) => Match[];
   getMatchById: (matchId: string) => Match | undefined;
-  getDefaultRules: () => ScoreRules;
 }
 
 export const useMatchStore = create<MatchState>()(
@@ -42,14 +40,6 @@ export const useMatchStore = create<MatchState>()(
       
       getMatchById: (matchId) => {
         return get().matches.find((match) => match.id === matchId);
-      },
-      
-      getDefaultRules: () => {
-        // Apexの一般的なルール設定
-        return {
-          killPointCap: 0, // 無制限
-          placementPoints: [12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
-        };
       },
     }),
     {

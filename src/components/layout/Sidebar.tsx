@@ -11,6 +11,7 @@ import {
 import { MdKeyboardArrowDown, MdKeyboardArrowRight, MdAdd, MdDelete } from 'react-icons/md';
 import { useCustomStore } from '../../store/customStore';
 import { useMatchStore } from '../../store/matchStore';
+import { useScoreRulesStore } from '../../store/scoreRulesStore';
 import type { Custom } from '../../types/custom';
 import type { Match } from '../../types/match';
 
@@ -29,11 +30,15 @@ export const Sidebar = () => {
   const getMatchesByCustomId = useMatchStore((state) => state.getMatchesByCustomId);
   const addMatch = useMatchStore((state) => state.addMatch);
   const deleteMatch = useMatchStore((state) => state.deleteMatch);
-  const getDefaultRules = useMatchStore((state) => state.getDefaultRules);
+  const addRule = useScoreRulesStore((state) => state.addRule);
+  const getDefaultRules = useScoreRulesStore((state) => state.getDefaultRules);
   
   const handleCreateCustom = () => {
-    const newCustomName = prompt('カスタム名を入力してください');
-    if (!newCustomName?.trim()) return;
+    console.log('新しいカスタムを作成');
+    let newCustomName = prompt('カスタム名を入力してください');
+    if (!newCustomName?.trim()) {
+      newCustomName = `カスタム_${customs.length + 1}`;
+    }
     
     const newCustom: Custom = {
       id: `custom_${Date.now()}`,
@@ -87,21 +92,25 @@ export const Sidebar = () => {
     e.stopPropagation(); // イベントの伝播を止める
     
     if (window.confirm('このカスタムとカスタムのすべてのマッチを削除しますか？この操作は元に戻せません')) {
-      const matchesToDelete = getMatchesByCustomId(customId);
-      
-      matchesToDelete.forEach(match => {
+      const matches = getMatchesByCustomId(customId);
+      matches.forEach(match => {
         deleteMatch(match.id);
       });
-      
       deleteCustom(customId);
+      setCurrentCustom(null);
+      setCurrentMatch(null);
     }
   };
   
-  const handleDeleteMatch = (matchId: string, e: React.MouseEvent) => {
+  const handleDeleteMatch = (customId: string, matchId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // イベントの伝播を止める
     
     if (window.confirm('このマッチを削除しますか？この操作は元に戻せません')) {
       deleteMatch(matchId);
+      if(currentMatchId === matchId) {
+        const matches = getMatchesByCustomId(customId);
+        setCurrentMatch(matches.length > 0 ? matches[0].id : null);
+      }
     }
   };
   
@@ -115,18 +124,31 @@ export const Sidebar = () => {
     
     const matches = getMatchesByCustomId(customId);
     const matchNumber = matches.length + 1;
-    const defaultRules = getDefaultRules();
+    const matchId = `${customId}_match_${Date.now()}`;
     
+    // 新しいマッチを作成
     const newMatch: Match = {
-      id: `match_${Date.now()}`,
+      id: matchId,
       customId: customId,
       matchNumber,
       teams: [],
-      rules: defaultRules,
       createdAt: Date.now(),
     };
     
+    // マッチを保存
     addMatch(newMatch);
+    
+    // 直前のマッチがあればそのルールを取得、なければデフォルトルールを使用
+    const previousMatch = matches.length > 0 ? matches[matches.length - 1] : null;
+    const defaultRules = getDefaultRules(previousMatch?.id);
+    
+    // ルールを保存
+    addRule({
+      id: `${customId}_${matchId}_rule_${Date.now()}`,
+      customId: customId,
+      matchId: matchId,
+      ...defaultRules
+    });
     
     setCurrentCustom(customId);
     setCurrentMatch(newMatch.id);
@@ -202,6 +224,8 @@ export const Sidebar = () => {
                       aria-label="Delete custom"
                       size="xs"
                       variant="ghost"
+                      mt="-1.5"
+                      mb="-1.5"
                       onClick={(e) => handleDeleteCustom(custom.id, e)}
                     >
                       <MdDelete />
@@ -237,7 +261,9 @@ export const Sidebar = () => {
                             aria-label="Delete match"
                             size="xs"
                             variant="ghost"
-                            onClick={(e) => handleDeleteMatch(match.id, e)}
+                            mt="-1.5"
+                            mb="-1.5"
+                            onClick={(e) => handleDeleteMatch(custom.id, match.id, e)}
                           >
                             <MdDelete />
                           </IconButton>

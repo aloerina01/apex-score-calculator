@@ -4,7 +4,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { MatchDetail } from '../MatchDetail';
-import { mockUseCustomStore, mockUseMatchStore } from '../../../test/mockStores';
+import { mockUseCustomStore, mockUseMatchStore, mockUseScoreRulesStore } from '../../../test/mockStores';
 import { useTeamEditor } from '../../../hooks/useTeamEditor';
 import { useScoreCalculation } from '../../../hooks/useScoreCalculation';
 import { useAnimatedDisplay } from '../../../hooks/useAnimatedDisplay';
@@ -32,8 +32,16 @@ describe('MatchDetail', () => {
     customId: 'custom1',
     matchNumber: 1,
     teams: [],
-    rules: { killPointCap: 0, placementPoints: [12, 9, 7, 5, 4, 3, 2, 1, 1, 1] },
     createdAt: Date.now()
+  };
+  
+  // テスト用のモックルールデータ
+  const mockRule = {
+    id: 'rule1',
+    customId: 'custom1',
+    matchId: 'match1',
+    killPointCap: 0,
+    placementPoints: [12, 9, 7, 5, 4, 3, 2, 1, 1, 1]
   };
   
   const mockMatchWithImage = {
@@ -78,6 +86,12 @@ describe('MatchDetail', () => {
     mockUseMatchStore({
       getMatchById: getMatchByIdMock,
       updateMatch: updateMatchMock
+    });
+    
+    const getRuleByMatchIdMock = vi.fn().mockReturnValue(mockRule);
+    
+    mockUseScoreRulesStore({
+      getRuleByMatchId: getRuleByMatchIdMock
     });
     
     // フックのモック
@@ -181,32 +195,6 @@ describe('MatchDetail', () => {
     expect(handleStartCalculationMock).toHaveBeenCalledWith(mockMatchWithImage.imageUrl);
   });
 
-  it('ルールが保存された時、updateMatchが呼ばれること', () => {
-    const getMatchByIdMock = vi.fn().mockReturnValue(mockMatch);
-    const updateMatchMock = vi.fn();
-    mockUseMatchStore({
-      getMatchById: getMatchByIdMock,
-      updateMatch: updateMatchMock
-    });
-    
-    // コンポーネントをレンダリング
-    customRender(<MatchDetail />);
-    
-    // 新しいルールを定義
-    const newRules = { killPointCap: 5, placementPoints: [15, 12, 10, 8, 6, 4, 2, 1, 1, 1] };
-    
-    // 直接updateMatchMockを呼び出す
-    updateMatchMock({
-      ...mockMatch,
-      rules: newRules
-    });
-    
-    // updateMatchが呼ばれたことを確認
-    expect(updateMatchMock).toHaveBeenCalledWith({
-      ...mockMatch,
-      rules: newRules
-    });
-  });
 
   it('チームデータがある場合、calculationCompleteがtrueに設定されること', () => {
     const getMatchByIdMock = vi.fn().mockReturnValue(mockMatchWithTeams);
