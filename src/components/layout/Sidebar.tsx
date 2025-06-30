@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Stack,
@@ -7,18 +7,22 @@ import {
   Flex,
   Icon,
   IconButton,
+  Input,
 } from '@chakra-ui/react';
 import { MdKeyboardArrowDown, MdKeyboardArrowRight, MdAdd, MdDelete } from 'react-icons/md';
 import { useCustomStore } from '../../store/customStore';
 import { useMatchStore } from '../../store/matchStore';
 import { useScoreRulesStore } from '../../store/scoreRulesStore';
+import { useDialog } from '../../hooks/useDialog';
 import type { Custom } from '../../types/custom';
 import type { Match } from '../../types/match';
+import { AnnouncementDialog } from '../ui/AnnouncementDialog';
 
 export const Sidebar = () => {
   const [expandedCustoms, setExpandedCustoms] = useState<Record<string, boolean>>({});
   const [hoveredCustomId, setHoveredCustomId] = useState<string | null>(null);
   const [hoveredMatchId, setHoveredMatchId] = useState<string | null>(null);
+  const [newCustomName, setNewCustomName] = useState('');
   
   const customs = useCustomStore((state) => state.customs);
   const currentCustomId = useCustomStore((state) => state.currentCustomId);
@@ -33,24 +37,49 @@ export const Sidebar = () => {
   const addRule = useScoreRulesStore((state) => state.addRule);
   const getDefaultRules = useScoreRulesStore((state) => state.getDefaultRules);
   
+  // ダイアログフックを使用
+  const { openDialog, setDialogConfig, generateDialogKey } = useDialog();
+  
+  // ダイアログキーを生成
+  const createCustomDialogKey = useMemo(() => generateDialogKey('create-custom'), [generateDialogKey]);
+  const deleteCustomDialogKey = useMemo(() => generateDialogKey('delete-custom'), [generateDialogKey]);
+  const deleteMatchDialogKey = useMemo(() => generateDialogKey('delete-match'), [generateDialogKey]);
+  
   const handleCreateCustom = () => {
-    console.log('新しいカスタムを作成');
-    let newCustomName = prompt('カスタム名を入力してください');
-    if (!newCustomName?.trim()) {
-      newCustomName = `カスタム_${customs.length + 1}`;
-    }
+    // 入力値をリセット
+    setNewCustomName('');
     
-    const newCustom: Custom = {
-      id: `custom_${Date.now()}`,
-      name: newCustomName,
-      createdAt: Date.now(),
-      matches: [],
-    };
+    // カスタム作成ダイアログを表示
+    openDialog(createCustomDialogKey, {
+      title: "カスタム作成",
+      confirmText: "作成",
+      showCancel: true,
+      cancelText: "キャンセル",
+      isValid: false, // 初期状態では無効（カスタム名が空のため）
+      onConfirm: () => {
+        const customName = newCustomName.trim();
+        const newCustom: Custom = {
+          id: `custom_${Date.now()}`,
+          name: customName,
+          createdAt: Date.now(),
+          matches: [],
+        };
+        
+        addCustom(newCustom);
+        setCurrentCustom(newCustom.id);
+      }
+    });
+  };
+  
+  // カスタム名の入力値が変更されたときの処理
+  const handleCustomNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewCustomName(value);
     
-    addCustom(newCustom);
-    
-    // 新しいカスタムを選択状態にする
-    setCurrentCustom(newCustom.id);
+    // ダイアログ設定を更新（isValidを更新）
+    setDialogConfig(createCustomDialogKey, {
+      isValid: value.trim().length > 0
+    });
   };
   
   // currentCustomIdまたはcurrentMatchIdが変更されたときに、対応するカスタムのExpandを展開する
@@ -91,27 +120,41 @@ export const Sidebar = () => {
   const handleDeleteCustom = (customId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // イベントの伝播を止める
     
-    if (window.confirm('このカスタムとカスタムのすべてのマッチを削除しますか？この操作は元に戻せません')) {
-      const matches = getMatchesByCustomId(customId);
-      matches.forEach(match => {
-        deleteMatch(match.id);
-      });
-      deleteCustom(customId);
-      setCurrentCustom(null);
-      setCurrentMatch(null);
-    }
+    // 確認ダイアログを表示
+    openDialog(deleteCustomDialogKey, {
+      title: "カスタム削除の確認",
+      confirmText: "削除",
+      cancelText: "キャンセル",
+      showCancel: true,
+      onConfirm: () => {
+        const matches = getMatchesByCustomId(customId);
+        matches.forEach(match => {
+          deleteMatch(match.id);
+        });
+        deleteCustom(customId);
+        setCurrentCustom(null);
+        setCurrentMatch(null);
+      }
+    });
   };
   
   const handleDeleteMatch = (customId: string, matchId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // イベントの伝播を止める
     
-    if (window.confirm('このマッチを削除しますか？この操作は元に戻せません')) {
-      deleteMatch(matchId);
-      if(currentMatchId === matchId) {
-        const matches = getMatchesByCustomId(customId);
-        setCurrentMatch(matches.length > 0 ? matches[0].id : null);
+    // 確認ダイアログを表示
+    openDialog(deleteMatchDialogKey, {
+      title: "マッチ削除の確認",
+      confirmText: "削除",
+      cancelText: "キャンセル",
+      showCancel: true,
+      onConfirm: () => {
+        deleteMatch(matchId);
+        if(currentMatchId === matchId) {
+          const matches = getMatchesByCustomId(customId);
+          setCurrentMatch(matches.length > 0 ? matches[0].id : null);
+        }
       }
-    }
+    });
   };
   
   const handleSelectMatch = (matchId: string, customId: string) => {
@@ -158,40 +201,41 @@ export const Sidebar = () => {
       [customId]: true,
     }));
   };
-  
+
   return (
-    <Box
-      width="300px"
-      height="100%"
-      bg="white"
-      p={4}
-      borderRightWidth={1}
-      borderColor="gray.200"
-      overflowY="auto"
-    >
-      <Button
-        width="100%"
-        mb={4}
-        onClick={handleCreateCustom}
-        variant="outline"
-        font-weight="bold"
+    <>
+      <Box
+        width="300px"
+        height="100%"
+        bg="white"
+        p={4}
+        borderRightWidth={1}
+        borderColor="gray.200"
+        overflowY="auto"
       >
-        <Icon as={MdAdd} boxSize={4} />
-        新しいカスタムを始める
-      </Button>
-      
-      <Stack gap={2}>
-        {customs.length === 0 ? (
-          <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
-            カスタムがありません
-          </Text>
-        ) : (
-          customs.map((custom) => {
-            const matches = getMatchesByCustomId(custom.id);
-            const isSelected = currentCustomId === custom.id && !currentMatchId;
-            
-            return (
-              <Box key={custom.id}>
+        <Button
+          width="100%"
+          mb={4}
+          onClick={handleCreateCustom}
+          variant="outline"
+          font-weight="bold"
+        >
+          <Icon as={MdAdd} boxSize={4} />
+          新しいカスタムを始める
+        </Button>
+        
+        <Stack gap={2}>
+          {customs.length === 0 ? (
+            <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
+              カスタムがありません
+            </Text>
+          ) : (
+            customs.map((custom) => {
+              const matches = getMatchesByCustomId(custom.id);
+              const isSelected = currentCustomId === custom.id && !currentMatchId;
+              
+              return (
+                <Box key={custom.id}>
                 <Flex
                   p={2}
                   borderRadius="md"
@@ -282,11 +326,36 @@ export const Sidebar = () => {
                     </Button>
                   </Stack>
                 )}
-              </Box>
-            );
-          })
-        )}
-      </Stack>
-    </Box>
+                </Box>
+              );
+            })
+          )}
+        </Stack>
+      </Box>
+      
+      {/* カスタム作成ダイアログの内容 */}
+      <AnnouncementDialog dialogKey={createCustomDialogKey}>
+        <Box>
+          <Text mb={4} color="gray.950">カスタム名を入力してください</Text>
+          <Input 
+            value={newCustomName} 
+            onChange={handleCustomNameChange} 
+            placeholder="カスタム名"
+            autoFocus
+            color="gray.950"
+          />
+        </Box>
+      </AnnouncementDialog>
+      
+      {/* カスタム削除確認ダイアログの内容 */}
+      <AnnouncementDialog dialogKey={deleteCustomDialogKey}>
+        <Text color="gray.950">このカスタムとカスタムのすべてのマッチを削除しますか？<br/>この操作は元に戻せません</Text>
+      </AnnouncementDialog>
+      
+      {/* マッチ削除確認ダイアログの内容 */}
+      <AnnouncementDialog dialogKey={deleteMatchDialogKey}>
+        <Text color="gray.950">このマッチを削除しますか？この操作は元に戻せません</Text>
+      </AnnouncementDialog>
+    </>
   );
 };

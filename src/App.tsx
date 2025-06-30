@@ -1,4 +1,5 @@
-import { Box, Text } from '@chakra-ui/react';
+import { useEffect, useMemo } from 'react';
+import { Box, Text, VStack } from '@chakra-ui/react';
 import { useAuthStore } from './store/authStore';
 import { useCustomStore } from './store/customStore';
 import { LoginForm } from './components/ui/LoginForm';
@@ -6,21 +7,31 @@ import { Layout } from './components/layout/Layout';
 import { CustomDetail } from './components/custom/CustomDetail';
 import { MatchDetail } from './components/custom/MatchDetail';
 import { AnnouncementDialog } from './components/ui/AnnouncementDialog';
+import { useDialog } from './hooks/useDialog';
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const hasAgreedToTerms = useAuthStore((state) => state.hasAgreedToTerms);
-  const agreeToTerms = useAuthStore((state) => state.agreeToTerms);
   const currentCustomId = useCustomStore((state) => state.currentCustomId);
   const currentMatchId = useCustomStore((state) => state.currentMatchId);
 
-  // ダイアログの表示制御
-  const showAnnouncementDialog = isAuthenticated && !hasAgreedToTerms;
+  const hasAgreedToTerms = useAuthStore((state) => state.hasAgreedToTerms);
+  const agreeToTerms = useAuthStore((state) => state.agreeToTerms);
+  const { openDialog, generateDialogKey } = useDialog();
   
-  // ダイアログを閉じる処理
-  const handleCloseDialog = () => {
-    agreeToTerms();
-  };
+  // ダイアログキーを生成
+  const termsDialogKey = useMemo(() => generateDialogKey('terms-agreement'), [generateDialogKey]);
+  
+  useEffect(() => {
+    if (isAuthenticated && !hasAgreedToTerms) {
+      openDialog(termsDialogKey, {
+        title: '必ずお読みください',
+        confirmText: "同意",
+        showCancel: false,
+        onConfirm: agreeToTerms
+      });
+    }
+  }, [isAuthenticated, hasAgreedToTerms, openDialog, termsDialogKey, agreeToTerms]);
+
 
   const renderMainContent = () => {
     if (currentMatchId) {
@@ -48,10 +59,20 @@ function App() {
             {renderMainContent()}
           </Layout>
           
-          <AnnouncementDialog 
-            isOpen={showAnnouncementDialog} 
-            onClose={handleCloseDialog} 
-          />
+          {/* 利用規約同意ダイアログ */}
+          <AnnouncementDialog dialogKey={termsDialogKey}>
+            <VStack align="stretch" color="gray.950">
+              <Text>
+                このツールはAIによりカスタム結果を解析しますが、間違った解析結果を出す場合があります。
+              </Text>
+              <Text>
+                このツールによる集計結果を鵜呑みにせず、カスタム運営者が最終確認することを推奨します。
+              </Text>
+              <Text>
+                カスタムに関連するトラブル等の責任を一切負いません。
+              </Text>
+            </VStack>
+          </AnnouncementDialog>
         </>
       ) : (
         <LoginForm />
