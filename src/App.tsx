@@ -27,7 +27,6 @@ function App() {
         title: '必ずお読みください',
         confirmText: "同意",
         showCancel: false,
-        onConfirm: agreeToTerms
       });
     }
   }, [isAuthenticated, hasAgreedToTerms, openDialog, termsDialogKey, agreeToTerms]);
@@ -60,7 +59,7 @@ function App() {
           </Layout>
           
           {/* 利用規約同意ダイアログ */}
-          <AnnouncementDialog dialogKey={termsDialogKey}>
+          <AnnouncementDialog dialogKey={termsDialogKey} onConfirm={agreeToTerms}>
             <VStack align="stretch" color="gray.950">
               <Text>
                 このツールはAIによりカスタム結果を解析しますが、間違った解析結果を出す場合があります。
