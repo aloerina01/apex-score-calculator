@@ -210,6 +210,9 @@ export const CustomDetail = () => {
                       ))}
                     </Table.Body>
                   </Table.Root>
+                  <Text textAlign="right" fontSize="sm" color="gray.300" mt={2}>
+                    Powered by PexScorer
+                  </Text>
                 </Box>
                 
                 {/* 表示用テーブル */}

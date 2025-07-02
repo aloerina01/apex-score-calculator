@@ -61,7 +61,6 @@ export const Sidebar = () => {
   };
 
   const handleCreateCustomConfirm = () => {
-    console.log("カスタム作成ボタンがクリックされました", newCustomName);
     const customName = newCustomName.trim();
     const newCustom: Custom = {
       id: `custom_${Date.now()}`,

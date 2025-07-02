@@ -62,7 +62,7 @@ export const LoginForm = () => {
       >
         <Stack gap={6}>
           <Box textAlign="center">
-            <Heading size="3xl" fontWeight="bold" color="blue.600">PexScorer</Heading>
+            <Heading size="3xl" fontWeight="bold" color="blue.600">PexScorer(β)</Heading>
             <Text mt={2} color="gray.500">Apexカスタムマッチのスコア計算ツール</Text>
           </Box>
           
