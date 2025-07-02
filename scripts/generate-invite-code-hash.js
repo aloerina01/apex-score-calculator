@@ -10,9 +10,8 @@
  * chmod +x scripts/generate-invite-code-hash.js
  * ./scripts/generate-invite-code-hash.js
  */
-
-const crypto = require('crypto');
-const readline = require('readline');
+import crypto from 'crypto';
+import readline from 'readline';
 
 const rl = readline.createInterface({
   input: process.stdin,
