@@ -137,6 +137,8 @@ export const CustomDetail = () => {
     return null;
   }
 
+  const rankIcon = ['🥇', '🥈', '🥉'];
+
   return (
     <Flex color="gray.950" height="100%" gap={4}>
       <Box flex="1">
@@ -152,7 +154,7 @@ export const CustomDetail = () => {
               次のマッチの集計を始める
             </Button>            
             {completedMatches.length > 0 && (
-              <Box mt={6} mr="auto" ml="auto" minWidth="780px" border="1px solid" borderColor="gray.200" borderRadius="md" p={4} ref={containerRef}>
+              <Box mt={6} mr="auto" ml="auto" minWidth="780px" maxWidth="780px" border="1px solid" borderColor="gray.200" borderRadius="md" p={4} ref={containerRef}>
                 <Flex justifyContent="space-between" alignItems="center" mb={3}>
                   <Flex alignItems="center" flexWrap="wrap">
                     <Text fontSize="lg" fontWeight="bold" mr={3}>{currentCustom.name} - 総合結果</Text>
@@ -182,10 +184,11 @@ export const CustomDetail = () => {
                   p={8}
                 >
                   <Text fontSize="lg" fontWeight="bold" mb={3}>{currentCustom.name} - 総合結果</Text>
-                  <Table.Root key="copy-table" size="sm" width="880px" striped>
+                  <Table.Root key="copy-table" size="sm" width="780px" striped>
                     <Table.Header>
                       <Table.Row>
-                        <Table.ColumnHeader>順位</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign="center">順位</Table.ColumnHeader>
+                        <Table.ColumnHeader></Table.ColumnHeader>
                         <Table.ColumnHeader>チーム名</Table.ColumnHeader>
                         <Table.ColumnHeader textAlign="center">キル数</Table.ColumnHeader>
                         <Table.ColumnHeader textAlign="center">キルPt</Table.ColumnHeader>
@@ -196,12 +199,13 @@ export const CustomDetail = () => {
                     <Table.Body color="black">
                       {cumulativeResults.map((team, index) => (
                         <Table.Row key={`copy-${team.teamName}`}>
-                          <Table.Cell>{index + 1}</Table.Cell>
+                          <Table.Cell textAlign="center" width="80px">{index + 1}</Table.Cell>
+                          <Table.Cell textAlign="center" width="20px">{rankIcon[index]}</Table.Cell>
                           <Table.Cell>{team.teamName}</Table.Cell>
-                          <Table.Cell textAlign="center">{team.totalKills}</Table.Cell>
-                          <Table.Cell textAlign="center">{team.totalKillPoints}</Table.Cell>
-                          <Table.Cell textAlign="center">{team.totalPlacementPoints}</Table.Cell>
-                          <Table.Cell textAlign="center" fontWeight="bold">{team.totalPoints}</Table.Cell>
+                          <Table.Cell textAlign="center" width="80px">{team.totalKills}</Table.Cell>
+                          <Table.Cell textAlign="center" width="80px">{team.totalKillPoints}</Table.Cell>
+                          <Table.Cell textAlign="center" width="80px">{team.totalPlacementPoints}</Table.Cell>
+                          <Table.Cell textAlign="center" width="80px" fontWeight="bold">{team.totalPoints}</Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>
@@ -212,7 +216,8 @@ export const CustomDetail = () => {
                 <Table.Root key="sm" size="sm" striped>
                   <Table.Header>
                     <Table.Row>
-                      <Table.ColumnHeader>順位</Table.ColumnHeader>
+                      <Table.ColumnHeader textAlign="center">順位</Table.ColumnHeader>
+                      <Table.ColumnHeader></Table.ColumnHeader>
                       <Table.ColumnHeader>チーム名</Table.ColumnHeader>
                       <Table.ColumnHeader textAlign="center">キル数</Table.ColumnHeader>
                       <Table.ColumnHeader textAlign="center">キルPt</Table.ColumnHeader>
@@ -223,12 +228,13 @@ export const CustomDetail = () => {
                   <Table.Body color="black">
                     {cumulativeResults.map((team, index) => (
                       <Table.Row key={team.teamName}>
-                        <Table.Cell>{index + 1}</Table.Cell>
+                        <Table.Cell textAlign="center" width="80px">{index + 1}</Table.Cell>
+                        <Table.Cell textAlign="center" width="20px">{rankIcon[index]}</Table.Cell>
                         <Table.Cell>{team.teamName}</Table.Cell>
-                        <Table.Cell textAlign="center">{team.totalKills}</Table.Cell>
-                        <Table.Cell textAlign="center">{team.totalKillPoints}</Table.Cell>
-                        <Table.Cell textAlign="center">{team.totalPlacementPoints}</Table.Cell>
-                        <Table.Cell textAlign="center" fontWeight="bold">{team.totalPoints}</Table.Cell>
+                        <Table.Cell textAlign="center" width="80px">{team.totalKills}</Table.Cell>
+                        <Table.Cell textAlign="center" width="80px">{team.totalKillPoints}</Table.Cell>
+                        <Table.Cell textAlign="center" width="80px">{team.totalPlacementPoints}</Table.Cell>
+                        <Table.Cell textAlign="center" width="80px" fontWeight="bold">{team.totalPoints}</Table.Cell>
                       </Table.Row>
                     ))}
                   </Table.Body>
