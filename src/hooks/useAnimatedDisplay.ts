@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 export function useAnimatedDisplay<T extends { teamId: string }>(
   items: T[],
   isEnabled: boolean,
-  interval: number = 150
+  interval: number = 50
 ) {
   const [visibleItems, setVisibleItems] = useState<T[]>([]);
   const [displayTimerId, setDisplayTimerId] = useState<number | null>(null);

@@ -19,7 +19,7 @@ export const CustomDetail = () => {
   const addMatch = useMatchStore((state) => state.addMatch);
   const setCurrentMatch = useCustomStore((state) => state.setCurrentMatch);
   const addRule = useScoreRulesStore((state) => state.addRule);
-  const getDefaultRules = useScoreRulesStore((state) => state.getDefaultRules);
+  const getDefaultRule = useScoreRulesStore((state) => state.getDefaultRule);
 
   const currentCustom = getCurrentCustom();
   const matches = currentCustomId ? getMatchesByCustomId(currentCustomId) : [];
@@ -101,11 +101,10 @@ export const CustomDetail = () => {
     
     // 直前のマッチがあればそのルールを取得、なければデフォルトルールを使用
     const previousMatch = matches.length > 0 ? matches[matches.length - 1] : null;
-    const defaultRules = getDefaultRules(previousMatch?.id);
+    const defaultRules = getDefaultRule(previousMatch?.id);
     
     // ルールを保存
     addRule({
-      id: `${currentCustomId}_${matchId}_rule_${Date.now()}`,
       customId: currentCustomId,
       matchId: matchId,
       ...defaultRules

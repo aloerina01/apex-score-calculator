@@ -23,6 +23,8 @@ export const Sidebar = () => {
   const [hoveredCustomId, setHoveredCustomId] = useState<string | null>(null);
   const [hoveredMatchId, setHoveredMatchId] = useState<string | null>(null);
   const [newCustomName, setNewCustomName] = useState('');
+  const [deleteTagetCustomId, setDeleteTagetCustomId] = useState('');
+  const [deleteTagetMatchId, setDeleteTagetMatchId] = useState({targetMatchId: '', parentCustomId: ''});
   
   const customs = useCustomStore((state) => state.customs);
   const currentCustomId = useCustomStore((state) => state.currentCustomId);
@@ -35,7 +37,8 @@ export const Sidebar = () => {
   const addMatch = useMatchStore((state) => state.addMatch);
   const deleteMatch = useMatchStore((state) => state.deleteMatch);
   const addRule = useScoreRulesStore((state) => state.addRule);
-  const getDefaultRules = useScoreRulesStore((state) => state.getDefaultRules);
+  const deleteRuleByMatchId = useScoreRulesStore((state) => state.deleteRuleByMatchId);
+  const getDefaultRule = useScoreRulesStore((state) => state.getDefaultRule);
   
   // ダイアログフックを使用
   const { openDialog, setDialogConfig, generateDialogKey } = useDialog();
@@ -46,9 +49,7 @@ export const Sidebar = () => {
   const deleteMatchDialogKey = useMemo(() => generateDialogKey('delete-match'), [generateDialogKey]);
   
   const handleCreateCustom = () => {
-    // 入力値をリセット
     setNewCustomName('');
-    
     // カスタム作成ダイアログを表示
     openDialog(createCustomDialogKey, {
       title: "カスタム作成",
@@ -56,20 +57,21 @@ export const Sidebar = () => {
       showCancel: true,
       cancelText: "キャンセル",
       isValid: false, // 初期状態では無効（カスタム名が空のため）
-      onConfirm: () => {
-        const customName = newCustomName.trim();
-        const newCustom: Custom = {
-          id: `custom_${Date.now()}`,
-          name: customName,
-          createdAt: Date.now(),
-          matches: [],
-        };
-        
-        addCustom(newCustom);
-        setCurrentCustom(newCustom.id);
-      }
     });
   };
+
+  const handleCreateCustomConfirm = () => {
+    console.log("カスタム作成ボタンがクリックされました", newCustomName);
+    const customName = newCustomName.trim();
+    const newCustom: Custom = {
+      id: `custom_${Date.now()}`,
+      name: customName,
+      createdAt: Date.now(),
+      matches: [],
+    };    
+    addCustom(newCustom);
+    setCurrentCustom(newCustom.id);
+  }
   
   // カスタム名の入力値が変更されたときの処理
   const handleCustomNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,27 +121,31 @@ export const Sidebar = () => {
   
   const handleDeleteCustom = (customId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // イベントの伝播を止める
-    
+    setDeleteTagetCustomId(customId);
     // 確認ダイアログを表示
     openDialog(deleteCustomDialogKey, {
       title: "カスタム削除の確認",
       confirmText: "削除",
       cancelText: "キャンセル",
       showCancel: true,
-      onConfirm: () => {
-        const matches = getMatchesByCustomId(customId);
-        matches.forEach(match => {
-          deleteMatch(match.id);
-        });
-        deleteCustom(customId);
-        setCurrentCustom(null);
-        setCurrentMatch(null);
-      }
     });
   };
+
+  const handleDeleteCustomConfirm = () => {
+    const matches = getMatchesByCustomId(deleteTagetCustomId);
+    matches.forEach(match => {
+      deleteMatch(match.id);
+      deleteRuleByMatchId(match.id);
+    });
+    deleteCustom(deleteTagetCustomId);
+    setCurrentCustom(null);
+    setCurrentMatch(null);
+  }
   
   const handleDeleteMatch = (customId: string, matchId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // イベントの伝播を止める
+    setDeleteTagetMatchId({targetMatchId: matchId, parentCustomId: customId });
+    setDeleteTagetCustomId(customId);
     
     // 確認ダイアログを表示
     openDialog(deleteMatchDialogKey, {
@@ -147,14 +153,16 @@ export const Sidebar = () => {
       confirmText: "削除",
       cancelText: "キャンセル",
       showCancel: true,
-      onConfirm: () => {
-        deleteMatch(matchId);
-        if(currentMatchId === matchId) {
-          const matches = getMatchesByCustomId(customId);
-          setCurrentMatch(matches.length > 0 ? matches[0].id : null);
-        }
-      }
     });
+  };
+
+  const handleDeleteMatchConfirm = () => {
+    deleteMatch(deleteTagetMatchId.targetMatchId);
+    deleteRuleByMatchId(deleteTagetMatchId.targetMatchId);
+    if (currentMatchId === deleteTagetMatchId.targetMatchId) {
+      const matches = getMatchesByCustomId(deleteTagetMatchId.parentCustomId);
+      setCurrentMatch(matches.length > 0 ? matches[0].id : null);
+    }
   };
   
   const handleSelectMatch = (matchId: string, customId: string) => {
@@ -183,14 +191,13 @@ export const Sidebar = () => {
     
     // 直前のマッチがあればそのルールを取得、なければデフォルトルールを使用
     const previousMatch = matches.length > 0 ? matches[matches.length - 1] : null;
-    const defaultRules = getDefaultRules(previousMatch?.id);
+    const defaultRule = getDefaultRule(previousMatch?.id);
     
     // ルールを保存
     addRule({
-      id: `${customId}_${matchId}_rule_${Date.now()}`,
       customId: customId,
       matchId: matchId,
-      ...defaultRules
+      ...defaultRule
     });
     
     setCurrentCustom(customId);
@@ -334,7 +341,7 @@ export const Sidebar = () => {
       </Box>
       
       {/* カスタム作成ダイアログの内容 */}
-      <AnnouncementDialog dialogKey={createCustomDialogKey}>
+      <AnnouncementDialog dialogKey={createCustomDialogKey} onConfirm={handleCreateCustomConfirm}>
         <Box>
           <Text mb={4} color="gray.950">カスタム名を入力してください</Text>
           <Input 
@@ -348,12 +355,12 @@ export const Sidebar = () => {
       </AnnouncementDialog>
       
       {/* カスタム削除確認ダイアログの内容 */}
-      <AnnouncementDialog dialogKey={deleteCustomDialogKey}>
+      <AnnouncementDialog dialogKey={deleteCustomDialogKey} onConfirm={handleDeleteCustomConfirm}>
         <Text color="gray.950">このカスタムとカスタムのすべてのマッチを削除しますか？<br/>この操作は元に戻せません</Text>
       </AnnouncementDialog>
       
       {/* マッチ削除確認ダイアログの内容 */}
-      <AnnouncementDialog dialogKey={deleteMatchDialogKey}>
+      <AnnouncementDialog dialogKey={deleteMatchDialogKey} onConfirm={handleDeleteMatchConfirm}>
         <Text color="gray.950">このマッチを削除しますか？この操作は元に戻せません</Text>
       </AnnouncementDialog>
     </>

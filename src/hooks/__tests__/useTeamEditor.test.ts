@@ -27,6 +27,8 @@ describe('useTeamEditor', () => {
   ];
   
   const mockRules: ScoreRules = {
+    customId: 'custom1',
+    matchId: 'match1',
     killPointCap: 0, // キルポイント上限なし
     placementPoints: [12, 9, 7, 5, 4, 3, 2, 1, 1, 1]
   };

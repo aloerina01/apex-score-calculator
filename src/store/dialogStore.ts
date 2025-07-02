@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 
 // ダイアログの設定タイプ
-export type DialogConfig = {
+export type DialogConfig<T = any> = {
   title: string;
   confirmText: string;
   cancelText?: string;
-  onConfirm?: () => void;
+  onConfirm?: (payload?: T) => void;
   showCancel: boolean;
   isValid?: boolean | (() => boolean); // 確認ボタンの有効/無効を制御
 };

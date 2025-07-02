@@ -11,23 +11,23 @@ export const ScoreRules = ({ customId, matchId }: ScoreRulesProps) => {
   const getRuleByMatchId = useScoreRulesStore((state) => state.getRuleByMatchId);
   const updateRule = useScoreRulesStore((state) => state.updateRule);
   const addRule = useScoreRulesStore((state) => state.addRule);
-  const getDefaultRules = useScoreRulesStore((state) => state.getDefaultRules);
+  const getDefaultRule = useScoreRulesStore((state) => state.getDefaultRule);
   
   // 現在のルールを取得または新規作成
   const currentRule = getRuleByMatchId(matchId);
   
-  const [killPointCap, setKillPointCap] = useState(currentRule?.killPointCap ?? getDefaultRules().killPointCap);
+  const [killPointCap, setKillPointCap] = useState(currentRule?.killPointCap ?? getDefaultRule().killPointCap);
   const [placementPoints, setPlacementPoints] = useState<number[]>(
-    currentRule?.placementPoints ?? getDefaultRules().placementPoints
+    currentRule?.placementPoints ?? getDefaultRule().placementPoints
   );
   const [isValid, setIsValid] = useState(true);
   
   // matchIdが変更されたときに状態を更新する
   useEffect(() => {
     const rule = getRuleByMatchId(matchId);
-    setKillPointCap(rule?.killPointCap ?? getDefaultRules().killPointCap);
-    setPlacementPoints(rule?.placementPoints ?? getDefaultRules().placementPoints);
-  }, [matchId, getRuleByMatchId, getDefaultRules]);
+    setKillPointCap(rule?.killPointCap ?? getDefaultRule().killPointCap);
+    setPlacementPoints(rule?.placementPoints ?? getDefaultRule().placementPoints);
+  }, [matchId, getRuleByMatchId, getDefaultRule]);
 
   // ルールの検証
   const validateRules = () => {
@@ -56,7 +56,6 @@ export const ScoreRules = ({ customId, matchId }: ScoreRulesProps) => {
     
     if (valid) {
       const ruleData = {
-        id: currentRule?.id ?? `${customId}_${matchId}_rule_${Date.now()}`,
         customId,
         matchId,
         killPointCap,

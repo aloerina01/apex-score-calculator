@@ -2,12 +2,13 @@ import type { ReactNode } from 'react';
 import { Button, Dialog, Portal } from "@chakra-ui/react";
 import { useDialogStore } from "../../store/dialogStore";
 
-type AnnouncementDialogProps = {
+type AnnouncementDialogProps<T = never> = {
   dialogKey: string;
   children?: ReactNode;
+  onConfirm?: (payload?: T) => void;
 };
 
-export const AnnouncementDialog = ({ dialogKey, children }: AnnouncementDialogProps) => {
+export const AnnouncementDialog = ({ dialogKey, children, onConfirm }: AnnouncementDialogProps) => {
   // ダイアログストアから状態を取得
   const openedDialogKey = useDialogStore((state) => state.openedDialogKey);
   const config = useDialogStore((state) => state.configs[dialogKey]);
@@ -20,7 +21,6 @@ export const AnnouncementDialog = ({ dialogKey, children }: AnnouncementDialogPr
     title, 
     confirmText = "OK", 
     cancelText = "キャンセル",
-    onConfirm,
     showCancel = true,
     isValid = true // デフォルトはtrue
   } = config;

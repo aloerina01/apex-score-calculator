@@ -12,7 +12,10 @@ vi.mock('../../services/geminiService', () => ({
 describe('useScoreCalculation', () => {
   // テスト用のモックデータ
   const mockCustomId = 'custom1';
+  const mockMatchId = 'match1';
   const mockRules: ScoreRules = {
+    customId: mockCustomId,
+    matchId: mockMatchId,
     killPointCap: 0, // キルポイント上限なし
     placementPoints: [12, 9, 7, 5, 4, 3, 2, 1, 1, 1]
   };

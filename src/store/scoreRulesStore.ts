@@ -8,12 +8,12 @@ interface ScoreRulesState {
   // アクション
   addRule: (rule: ScoreRules) => void;
   updateRule: (rule: ScoreRules) => void;
-  deleteRule: (id: string) => void;
+  deleteRuleByMatchId: (matchId: string) => void;
   
   // セレクタ
   getRulesByCustomId: (customId: string) => ScoreRules[];
   getRuleByMatchId: (matchId: string) => ScoreRules | undefined;
-  getDefaultRules: (previousMatchId?: string) => Pick<ScoreRules, 'killPointCap' | 'placementPoints'>;
+  getDefaultRule: (previousMatchId?: string) => Pick<ScoreRules, 'killPointCap' | 'placementPoints'>;
 }
 
 export const useScoreRulesStore = create<ScoreRulesState>()(
@@ -29,8 +29,8 @@ export const useScoreRulesStore = create<ScoreRulesState>()(
         rules: state.rules.map((r) => (r.matchId === rule.matchId ? rule : r)),
       })),
       
-      deleteRule: (id) => set((state) => ({
-        rules: state.rules.filter((r) => r.id !== id),
+      deleteRuleByMatchId: (matchId) => set((state) => ({
+        rules: state.rules.filter((r) => r.matchId !== matchId),
       })),
       
       getRulesByCustomId: (customId) => {
@@ -41,7 +41,7 @@ export const useScoreRulesStore = create<ScoreRulesState>()(
         return get().rules.find((rule) => rule.matchId === matchId);
       },
       
-      getDefaultRules: (previousMatchId?: string) => {
+      getDefaultRule: (previousMatchId?: string) => {
         if (previousMatchId) {
           // 指定されたマッチIDのルールを取得
           const rule = get().getRuleByMatchId(previousMatchId);

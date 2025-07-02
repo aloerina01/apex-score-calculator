@@ -64,7 +64,6 @@ export function useScoreCalculation(
       // 解析結果からスコアを計算
       const calculatedTeams = calculateScores(apiResponse);
       
-      // 計算結果を親コンポーネントに通知
       onCalculationComplete(calculatedTeams);
       
       return calculatedTeams;

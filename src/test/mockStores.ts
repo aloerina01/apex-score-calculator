@@ -2,9 +2,10 @@ import { vi } from 'vitest';
 import { useCustomStore } from '../store/customStore';
 import { useMatchStore } from '../store/matchStore';
 import { useScoreRulesStore } from '../store/scoreRulesStore';
+import { useDialogStore } from '../store/dialogStore';
 import type { Match } from '../types/match';
-import type { Custom } from '../types/custom';
 import type { ScoreRules } from '../types/score';
+import type { DialogConfig } from '../store/dialogStore';
 
 // matchStore.tsのMatchStateインターフェースを再定義
 interface MatchState {
@@ -40,6 +41,20 @@ vi.mock('../store/matchStore', () => ({
 // スコアルールストアのモック
 vi.mock('../store/scoreRulesStore', () => ({
   useScoreRulesStore: vi.fn()
+}));
+
+// dialogStore.tsのDialogStateインターフェースを再定義
+interface DialogState {
+  openedDialogKey: string | null;
+  configs: Record<string, DialogConfig>;
+  openDialog: (key: string, config: DialogConfig) => void;
+  closeDialog: () => void;
+  setDialogConfig: (key: string, config: Partial<DialogConfig>) => void;
+}
+
+// ダイアログストアのモック
+vi.mock('../store/dialogStore', () => ({
+  useDialogStore: vi.fn()
 }));
 
 // 型安全なモック関数
@@ -125,4 +140,36 @@ export const mockUseScoreRulesStore = (overrides: Partial<ScoreRulesState> = {})
     
     return selector(state);
   });
+};
+
+// onConfirmを保存するためのグローバル変数
+let savedOnConfirm: (() => void) | undefined;
+
+export const mockUseDialogStore = (overrides: Partial<DialogState> = {}) => {
+  const mockedUseDialogStore = useDialogStore as unknown as ReturnType<typeof vi.fn>;
+  
+  // openDialogのデフォルト実装
+  const defaultOpenDialog = vi.fn((_key: string, config: DialogConfig) => {
+    // onConfirmを保存
+    if (config.onConfirm) {
+      savedOnConfirm = config.onConfirm;
+    }
+  });
+  
+  mockedUseDialogStore.mockImplementation((selector: any) => {
+    const state: DialogState = {
+      openedDialogKey: overrides.openedDialogKey || null,
+      configs: overrides.configs || {},
+      openDialog: overrides.openDialog || defaultOpenDialog,
+      closeDialog: overrides.closeDialog || vi.fn(),
+      setDialogConfig: overrides.setDialogConfig || vi.fn()
+    };
+    
+    return selector(state);
+  });
+  
+  // savedOnConfirmを返す補助関数を追加
+  return {
+    getSavedOnConfirm: () => savedOnConfirm
+  };
 };

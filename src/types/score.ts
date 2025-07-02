@@ -9,7 +9,6 @@ export interface TeamScore {
 }
 
 export interface ScoreRules {
-  id?: string; // 一意のID（自動生成）
   customId: string;
   matchId: string;
   killPointCap: number; // キルポイント上限（0は無制限）
