@@ -1,16 +1,41 @@
-import { Button, CloseButton, Dialog, Portal, Text, VStack } from "@chakra-ui/react";
+import type { ReactNode } from 'react';
+import { Button, Dialog, Portal } from "@chakra-ui/react";
+import { useDialogStore } from "../../store/dialogStore";
 
-interface AnnouncementDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+type AnnouncementDialogProps<T = never> = {
+  dialogKey: string;
+  children?: ReactNode;
+  onConfirm?: (payload?: T) => void;
+};
 
-export const AnnouncementDialog = ({ isOpen, onClose }: AnnouncementDialogProps) => {
-  if (!isOpen) return null;
+export const AnnouncementDialog = ({ dialogKey, children, onConfirm }: AnnouncementDialogProps) => {
+  // ダイアログストアから状態を取得
+  const openedDialogKey = useDialogStore((state) => state.openedDialogKey);
+  const config = useDialogStore((state) => state.configs[dialogKey]);
+  const closeDialog = useDialogStore((state) => state.closeDialog);
+  
+  // このダイアログが開いていない場合は何も表示しない
+  if (openedDialogKey !== dialogKey || !config) return null;
+  
+  const { 
+    title, 
+    confirmText = "OK", 
+    cancelText = "キャンセル",
+    showCancel = true,
+    isValid = true // デフォルトはtrue
+  } = config;
+
+  // isValidが関数の場合は実行して結果を取得、そうでなければそのまま使用
+  const isButtonEnabled = typeof isValid === 'function' ? isValid() : isValid;
+
+  const handleConfirm = () => {
+    if (onConfirm) onConfirm();
+    closeDialog();
+  };
 
   return (
     <Dialog.Root
-      open={isOpen}
+      open={true}
       placement="center"
       motionPreset="scale"
       trapFocus={true}
@@ -20,35 +45,35 @@ export const AnnouncementDialog = ({ isOpen, onClose }: AnnouncementDialogProps)
         <Dialog.Positioner>
           <Dialog.Content maxWidth="500px" width="90%">
             <Dialog.Header>
-              <Dialog.Title color="red.600" fontSize="xl" fontWeight="bold">
-                必ずお読みください
+              <Dialog.Title color="gray.950" fontSize="xl" fontWeight="bold">
+                {title}
               </Dialog.Title>
             </Dialog.Header>
             
             <Dialog.Body>
-              <VStack align="stretch" color="gray.950">
-                <Text>
-                  このツールはAIによりカスタム結果を解析しますが、間違った解析結果を出す場合があります。
-                </Text>
-                <Text>
-                  このツールによる集計結果を鵜呑みにせず、カスタム運営者が最終確認することを推奨します。
-                </Text>
-                <Text>
-                  カスタムに関連するトラブル等の責任を一切負いません。
-                </Text>
-              </VStack>
+              {children}
             </Dialog.Body>
             
             <Dialog.Footer>
-                <Dialog.ActionTrigger asChild>
-                    <Button 
-                        colorScheme="blue" 
-                        width="100%" 
-                        onClick={onClose}
-                    >
-                同意
-              </Button>
-                </Dialog.ActionTrigger>
+              {showCancel && (
+                <Button 
+                  variant="outline" 
+                  mr={3} 
+                  onClick={closeDialog}
+                >
+                  {cancelText}
+                </Button>
+              )}
+              <Dialog.ActionTrigger asChild>
+                <Button 
+                  colorPalette="blue" 
+                  width={showCancel ? "auto" : "100%"} 
+                  onClick={handleConfirm}
+                  disabled={!isButtonEnabled}
+                >
+                  {confirmText}
+                </Button>
+              </Dialog.ActionTrigger>
             </Dialog.Footer>
           </Dialog.Content>
         </Dialog.Positioner>

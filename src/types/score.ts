@@ -9,6 +9,8 @@ export interface TeamScore {
 }
 
 export interface ScoreRules {
+  customId: string;
+  matchId: string;
   killPointCap: number; // キルポイント上限（0は無制限）
   placementPoints: number[]; // インデックスが順位-1、値がポイント
 }

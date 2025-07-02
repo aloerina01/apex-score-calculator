@@ -5,8 +5,7 @@ import { useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { useCustomStore } from '../../store/customStore';
 import { useMatchStore } from '../../store/matchStore';
-import { ScoreRules } from '../score/ScoreRules';
-import type { ScoreRules as ScoreRulesType, TeamScore } from '../../types/score';
+import { useScoreRulesStore } from '../../store/scoreRulesStore';
 import type { Match } from '../../types/match';
 
 export const CustomDetail = () => {
@@ -17,9 +16,10 @@ export const CustomDetail = () => {
   const currentCustomId = useCustomStore((state) => state.currentCustomId);
   const getCurrentCustom = useCustomStore((state) => state.getCurrentCustom);
   const getMatchesByCustomId = useMatchStore((state) => state.getMatchesByCustomId);
-  const getDefaultRules = useMatchStore((state) => state.getDefaultRules);
   const addMatch = useMatchStore((state) => state.addMatch);
   const setCurrentMatch = useCustomStore((state) => state.setCurrentMatch);
+  const addRule = useScoreRulesStore((state) => state.addRule);
+  const getDefaultRule = useScoreRulesStore((state) => state.getDefaultRule);
 
   const currentCustom = getCurrentCustom();
   const matches = currentCustomId ? getMatchesByCustomId(currentCustomId) : [];
@@ -85,19 +85,33 @@ export const CustomDetail = () => {
     if (!currentCustomId || !currentCustom) return;
 
     const matchNumber = matches.length + 1;
-    const defaultRules = getDefaultRules();
-
+    const matchId = `${currentCustomId}_match_${Date.now()}`;
+    
+    // 新しいマッチを作成
     const newMatch: Match = {
-      id: `match_${Date.now()}`,
+      id: matchId,
       customId: currentCustomId,
       matchNumber,
       teams: [],
-      rules: defaultRules,
       createdAt: Date.now(),
     };
-
+    
+    // マッチを保存
     addMatch(newMatch);
-    setCurrentMatch(newMatch.id);
+    
+    // 直前のマッチがあればそのルールを取得、なければデフォルトルールを使用
+    const previousMatch = matches.length > 0 ? matches[matches.length - 1] : null;
+    const defaultRules = getDefaultRule(previousMatch?.id);
+    
+    // ルールを保存
+    addRule({
+      customId: currentCustomId,
+      matchId: matchId,
+      ...defaultRules
+    });
+    
+    // 現在のマッチを設定
+    setCurrentMatch(matchId);
   };
 
   const handleCopyResults = async () => {

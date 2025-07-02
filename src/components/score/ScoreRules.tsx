@@ -1,18 +1,33 @@
 import { useState, useEffect } from 'react';
 import { Box, Stack, Text, Input, Flex } from '@chakra-ui/react';
-import type { ScoreRules as ScoreRulesType } from '../../types/score';
+import { useScoreRulesStore } from '../../store/scoreRulesStore';
 
 interface ScoreRulesProps {
-  initialRules?: ScoreRulesType;
-  onSave: (rules: ScoreRulesType) => void;
+  customId: string;
+  matchId: string;
 }
 
-export const ScoreRules = ({ initialRules, onSave }: ScoreRulesProps) => {
-  const [killPointCap, setKillPointCap] = useState(initialRules?.killPointCap || 0);
+export const ScoreRules = ({ customId, matchId }: ScoreRulesProps) => {
+  const getRuleByMatchId = useScoreRulesStore((state) => state.getRuleByMatchId);
+  const updateRule = useScoreRulesStore((state) => state.updateRule);
+  const addRule = useScoreRulesStore((state) => state.addRule);
+  const getDefaultRule = useScoreRulesStore((state) => state.getDefaultRule);
+  
+  // 現在のルールを取得または新規作成
+  const currentRule = getRuleByMatchId(matchId);
+  
+  const [killPointCap, setKillPointCap] = useState(currentRule?.killPointCap ?? getDefaultRule().killPointCap);
   const [placementPoints, setPlacementPoints] = useState<number[]>(
-    initialRules?.placementPoints || [12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+    currentRule?.placementPoints ?? getDefaultRule().placementPoints
   );
   const [isValid, setIsValid] = useState(true);
+  
+  // matchIdが変更されたときに状態を更新する
+  useEffect(() => {
+    const rule = getRuleByMatchId(matchId);
+    setKillPointCap(rule?.killPointCap ?? getDefaultRule().killPointCap);
+    setPlacementPoints(rule?.placementPoints ?? getDefaultRule().placementPoints);
+  }, [matchId, getRuleByMatchId, getDefaultRule]);
 
   // ルールの検証
   const validateRules = () => {
@@ -40,18 +55,21 @@ export const ScoreRules = ({ initialRules, onSave }: ScoreRulesProps) => {
     setIsValid(valid);
     
     if (valid) {
-      const rules = {
+      const ruleData = {
+        customId,
+        matchId,
         killPointCap,
         placementPoints,
       };
       
-      // LocalStorageに保存
-      localStorage.setItem('scoreRules', JSON.stringify(rules));
-      
-      // 親コンポーネントに通知
-      onSave(rules);
+      // ストアに保存
+      if (currentRule) {
+        updateRule(ruleData);
+      } else {
+        addRule(ruleData);
+      }
     }
-  }, [killPointCap, placementPoints, onSave]);
+  }, [killPointCap, placementPoints, customId, matchId, currentRule, updateRule, addRule]);
   
   // 入力値の変更を処理
   const handleKillPointCapChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
 import type { Custom } from '../types/custom';
 import type { Match } from '../types/match';
 
@@ -21,6 +22,7 @@ interface CustomState {
 }
 
 export const useCustomStore = create<CustomState>()(
+  devtools(
   persist(
     (set, get) => ({
       customs: [],
@@ -70,5 +72,6 @@ export const useCustomStore = create<CustomState>()(
       name: 'custom-storage',
       storage: createJSONStorage(() => localStorage),
     }
-  )
+  ),{ name: 'CustomStore' } // DevToolsでの表示名
+)
 );

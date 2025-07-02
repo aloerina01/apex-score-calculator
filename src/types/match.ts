@@ -1,6 +1,5 @@
 // マッチ情報の型定義
-import { TeamScore } from './score';
-import { ScoreRules } from './score';
+import type { TeamScore } from './score';
 
 export interface Match {
   id: string;
@@ -8,6 +7,5 @@ export interface Match {
   matchNumber: number;
   imageUrl?: string; // 画像のData URL
   teams: TeamScore[];
-  rules: ScoreRules; // ルールをマッチごとに持たせる
   createdAt: number;
 }
