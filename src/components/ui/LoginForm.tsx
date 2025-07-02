@@ -10,11 +10,7 @@ import { useAuthStore } from '../../store/authStore';
 
 export const LoginForm = () => {
   const [inviteCode, setInviteCode] = useState('');
-<<<<<<< HEAD
   const [, setLoading] = useState(false);
-=======
-  const [loading, setLoading] = useState(false);
->>>>>>> origin/main
   const [attempts, setAttempts] = useState(0);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   const login = useAuthStore((state) => state.login);
