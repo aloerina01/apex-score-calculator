@@ -49,8 +49,9 @@ export async function compressImage(imageDataUrl: string): Promise<string> {
  */
 export async function analyzeImage(imageDataUrl: string): Promise<GeminiApiResponse[]> {
   try {
+    console.log('compressing image...');
     const compressedImage = await compressImage(imageDataUrl);
-    
+    console.log('image compressed successfully', compressedImage);
     const base64Image = compressedImage.split(',')[1];
     
     const requestBody = {
@@ -75,10 +76,11 @@ export async function analyzeImage(imageDataUrl: string): Promise<GeminiApiRespo
     };
 
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    console.log('API Key is ready', Boolean(apiKey));
     if (!apiKey) {
       throw new Error('Gemini API Keyが設定されていません');
     }
-    
+    console.log('Sending request to Gemini API...');
     const response = await fetch(GEMINI_API_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -87,6 +89,7 @@ export async function analyzeImage(imageDataUrl: string): Promise<GeminiApiRespo
     },
       body: JSON.stringify(requestBody)
     });
+    console.log('Received response from Gemini API', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -103,6 +106,7 @@ export async function analyzeImage(imageDataUrl: string): Promise<GeminiApiRespo
                       textContent.match(/\[\s*{\s*"rank"[\s\S]*}\s*\]/);
     return JSON.parse(jsonMatch);
   } catch (error) {
+    console.error(error);
     throw new Error('APIレスポンスからJSONデータを抽出できませんでした');
   }
 }
