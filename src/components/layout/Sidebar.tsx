@@ -241,6 +241,7 @@ export const Sidebar = () => {
               const isSelected = currentCustomId === custom.id && !currentMatchId;
               
               return (
+                <>
                 <Box key={custom.id}>
                 <Flex
                   p={2}
@@ -333,6 +334,8 @@ export const Sidebar = () => {
                   </Stack>
                 )}
                 </Box>
+                <hr />
+                </>
               );
             })
           )}
